@@ -30,6 +30,15 @@ public class WorkerResource
     public ResponseEntity<Worker> findById(@PathVariable Long id) {
         Optional<Worker> worker = repository.findById(id);
 
+        /*
+        //The commented code below, can practically test the configured connection time in hr-payroll service.
+        try {
+            Thread.sleep(3000L);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        */
+
         return worker
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));

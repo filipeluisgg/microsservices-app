@@ -20,7 +20,7 @@ public class UserResource
     @GetMapping(value = "/search")
     public ResponseEntity<User> findByEmail(@RequestParam String email) {
         try {
-            User user = userService.findByEmail(email);
+            User user = (User) userService.loadUserByUsername(email);
             return ResponseEntity.ok(user);
         }
         catch (IllegalArgumentException e) {

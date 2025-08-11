@@ -10,7 +10,8 @@ Spring Boot 2          # Framework para desenvolvimento ágil
 Spring Cloud           # Para orquestração de microserviços.
 Spring Security        # Segurança e autenticação
 Maven                  # Gerenciamento de dependências e build
-Banco de dados H2      # Usado em desenvolvimento/testes
+Banco de dados H2      # Para ambiente de desenvolvimento
+Docker e Postman       # Usados para testes em homologação
 ```
 
 
@@ -84,11 +85,46 @@ export SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD=seu_token
 ```
 mvn clean package
 ```
-<br>5. Inicie cada microsserviço individualmente <br>
-Entre na pasta de cada serviço e execute:
-```
-mvn spring-boot:run
-```
+<br>5. Entre na pasta de cada microsserviço e inicie-o com ```mvn spring-boot:run```, faça nessa ordem:
+1. hr-config-server (porta 8888) — fornece configurações centralizadas
+2. hr-eureka-server (porta 8761) — registry / service discovery.
+3. hr-oauth — Authorization Server (registra no Eureka).
+4. hr-api-gateway-zuul (porta 8765) — gateway/entrada única.
+5. Microsserviços: hr-worker, hr-user, hr-payroll (serão descobertos via Eureka).
+
+Obs: payroll, worker, oauth e user tem endereço de porta variável, com isso, é possível instanciar vários destes simultaneamente.
+
+
+<br>7. Pode-se verificar o registro dos microsserviços no Eureka pela rota `http://localhost:8761`
+
+
+<h2>Documentação da API</h2>
+<h3>Endpoints</h3>
+
+### hr-user
+- GET `/hr-user/users/{id}` — busca usuário por ID
+- GET `/hr-user/users/search?email={email}` — busca usuário por e-mail  
+  *Autorização:* conforme configuração do gateway
+
+### hr-payroll
+- GET `/hr-payroll/payments/{workerId}/days/{days}` — calcula pagamento com Hystrix fallback  
+  *Autorização:* `ROLE_ADMIN`
+
+### hr-oauth
+- POST `/hr-oauth/oauth/token` — emissão de token (Basic Auth com `client_id:client_secret`, body `grant_type=password&username=...&password=...`)
+- GET `/hr-oauth/users/search?email={email}` — busca usuário por e-mail  
+  *Obs:* `oauth.client.name` e `oauth.client.secret` são definidos no Config Server ou em variáveis de ambiente
+
+### hr-worker
+- GET `/hr-worker/workers/configs` — retorna valor de configuração (`test.config`)
+- GET `/hr-worker/workers` — lista todos os trabalhadores
+- GET `/hr-worker/workers/{id}` — busca trabalhador por ID  
+  *Autorização:* `ROLE_OPERATOR` ou `ROLE_ADMIN`
+
+
+### Eureka
+- GET `http://localhost:8761/` — dashboard do service registry
+
 
 
 <br>
@@ -111,7 +147,7 @@ Para versionamento do projeto utiliza-se o [Semantic Versioning](http://semver.o
 
 <br>
 <h2>Autores</h2>
-<ul> <li><b>Luis Felipe<b> - <i>Trabalho inicial</i></li> </ul>
+<ul> <li><b>Luis Felipe</b> - <i>Trabalho inicial</i></li> </ul>
 
 
 <br>
